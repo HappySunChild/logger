@@ -23,14 +23,14 @@ local function get_formatted_message(
 
 	hooks.notify("overwrite_message", function(new_message: string)
 		message = new_message
-	end, message, severity, ...)
+	end, severity, message, ...)
 
 	hooks.notify("prepend_annotations", function(annotation: string)
 		table.insert(prepend_annotations, annotation)
-	end, message, severity, ...)
+	end, severity, message, ...)
 	hooks.notify("append_annotations", function(annotation: string)
 		table.insert(append_annotations, annotation)
-	end, message, severity, ...)
+	end, severity, message, ...)
 
 	return `{table.concat(prepend_annotations, " ")} {message} {table.concat(append_annotations, " ")}`
 end

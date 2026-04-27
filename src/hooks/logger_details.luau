@@ -2,7 +2,7 @@ local logger_hooks = require("../logger_hooks")
 local parse_error = require("../parse_error")
 
 local logger_details: logger_hooks.Hook = {
-	append_annotations = function(add_annotation: (string) -> (), _, err: parse_error.Error)
+	append_annotations = function(add_annotation: (string) -> (), _, _, err: parse_error.Error)
 		if type(err) ~= "table" then
 			return
 		end
