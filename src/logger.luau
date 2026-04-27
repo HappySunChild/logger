@@ -4,21 +4,31 @@ export type Options = {
 	hooks: { logger_hooks.Hook }?,
 }
 export type ConfiguredLogger = {
-	log: (message: string, ...any) -> (),
+	info: (message: string, ...any) -> (),
 	warning: (message: string, ...any) -> (),
 	error: (message: string, ...any) -> (),
+	fatal: (message: string, ...any) -> (),
 }
 
-local function get_annotated_message(hooks: logger_hooks.LoggerHooks, message: string, ...: any): string
+local function get_formatted_message(
+	hooks: logger_hooks.LoggerHooks,
+	severity: string,
+	message: string,
+	...: any
+): string
 	local prepend_annotations = {}
 	local append_annotations = {}
 
+	hooks.notify("overwrite_message", function(new_message: string)
+		message = new_message
+	end, message, severity, ...)
+
 	hooks.notify("prepend_annotations", function(annotation: string)
 		table.insert(prepend_annotations, annotation)
-	end, message, ...)
+	end, message, severity, ...)
 	hooks.notify("append_annotations", function(annotation: string)
 		table.insert(append_annotations, annotation)
-	end, message, ...)
+	end, message, severity, ...)
 
 	return `{table.concat(prepend_annotations, " ")} {message} {table.concat(append_annotations, " ")}`
 end
@@ -26,25 +36,32 @@ end
 local function logger(options: Options): ConfiguredLogger
 	local hooks = logger_hooks(options.hooks)
 
-	local function log(message: string, ...)
-		hooks.notify("raw_log", message)
-		hooks.notify("log", get_annotated_message(hooks, message, ...))
+	local function log(severity: string, message: string, ...)
+		hooks.notify("on_raw_log", severity, message, ...)
+		hooks.notify("on_log", severity, get_formatted_message(hooks, severity, message, ...))
+	end
+
+	local function info(message: string, ...)
+		log("info", message, ...)
 	end
 
 	local function warning(message: string, ...: any)
-		hooks.notify("raw_log_warning", message, ...)
-		hooks.notify("log_warning", get_annotated_message(hooks, message, ...))
+		log("warning", message, ...)
 	end
 
 	local function error(message: string, ...: any)
-		hooks.notify("raw_log_error", message, ...)
-		hooks.notify("log_error", get_annotated_message(hooks, message, ...))
+		log("error", message, ...)
+	end
+
+	local function fatal(message: string, ...: any)
+		log("fatal", message, ...)
 	end
 
 	local configured_logger = {
-		log = log,
+		info = info,
 		warning = warning,
 		error = error,
+		fatal = fatal,
 	}
 
 	return configured_logger

@@ -1,12 +1,9 @@
 export type HookMethod =
-	"prepend_annotations"
+	| "prepend_annotations"
 	| "append_annotations"
-	| "raw_log"
-	| "raw_log_warning"
-	| "raw_log_error"
-	| "log"
-	| "log_warning"
-	| "log_error"
+	| "on_raw_log"
+	| "on_log"
+	| "overwrite_message"
 	| string
 export type Hook<Keys = HookMethod> = { [Keys]: (...any) -> () }
 export type LoggerHooks = { notify: (method_name: HookMethod, ...any) -> () }
