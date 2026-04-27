@@ -1,16 +1,14 @@
 local logger_hooks = require("./logger_hooks")
-local parse_error = require("./parse_error")
 
 export type Options = {
 	hooks: { logger_hooks.Hook }?,
 }
-export type Configured = {
+export type ConfiguredLogger = {
 	log: (message: string, ...any) -> (),
-	warning: (message: string, err: parse_error.Error, ...any) -> (),
-	error: (message: string, err: parse_error.Error, ...any) -> (),
-
-	parse_error: typeof(parse_error),
+	warning: (message: string, ...any) -> (),
+	error: (message: string, ...any) -> (),
 }
+
 local function get_annotated_message(hooks: logger_hooks.LoggerHooks, message: string, ...: any): string
 	local prepend_annotations = {}
 	local append_annotations = {}
@@ -25,30 +23,28 @@ local function get_annotated_message(hooks: logger_hooks.LoggerHooks, message: s
 	return `{table.concat(prepend_annotations, " ")} {message} {table.concat(append_annotations, " ")}`
 end
 
-local function logger(options: Options): Configured
+local function logger(options: Options): ConfiguredLogger
 	local hooks = logger_hooks(options.hooks)
 
-	local function log(message: string)
+	local function log(message: string, ...)
 		hooks.notify("raw_log", message)
-		hooks.notify("log", get_annotated_message(hooks, message))
+		hooks.notify("log", get_annotated_message(hooks, message, ...))
 	end
 
-	local function warning(message: string, err: parse_error.Error, ...: any)
-		hooks.notify("raw_log_warning", message, err, ...)
-		hooks.notify("log_warning", get_annotated_message(hooks, message, err, ...))
+	local function warning(message: string, ...: any)
+		hooks.notify("raw_log_warning", message, ...)
+		hooks.notify("log_warning", get_annotated_message(hooks, message, ...))
 	end
 
-	local function error(message: string, err: parse_error.Error, ...: any)
-		hooks.notify("raw_log_error", message, err, ...)
-		hooks.notify("log_error", get_annotated_message(hooks, message, err, ...))
+	local function error(message: string, ...: any)
+		hooks.notify("raw_log_error", message, ...)
+		hooks.notify("log_error", get_annotated_message(hooks, message, ...))
 	end
 
 	local configured_logger = {
 		log = log,
 		warning = warning,
 		error = error,
-
-		parse_error = parse_error,
 	}
 
 	return configured_logger

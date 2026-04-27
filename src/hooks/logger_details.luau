@@ -3,11 +3,13 @@ local parse_error = require("../parse_error")
 
 local logger_details: logger_hooks.Hook = {
 	append_annotations = function(add_annotation: (string) -> (), _, err: parse_error.Error)
-		if err == nil then
+		if type(err) ~= "table" then
 			return
 		end
 
-		add_annotation(`\n\t---- Error message ----\n\t{err.message}\n\n\t---- Stack trace ----\n\t{err.trace}`)
+		add_annotation(
+			string.gsub(`\n---- Error message ----\n{err.message}\n\n---- Stack trace ----\n{err.trace}`, "\n", "\n\t")
+		)
 	end,
 }
 
