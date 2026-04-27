@@ -10,9 +10,11 @@ export type ConfiguredLogger = {
 	fatal: (message: string, ...any) -> (),
 }
 
+export type Severity = "info" | "warning" | "error" | "fatal" | string
+
 local function get_formatted_message(
 	hooks: logger_hooks.LoggerHooks,
-	severity: string,
+	severity: Severity,
 	message: string,
 	...: any
 ): string
@@ -36,7 +38,7 @@ end
 local function logger(options: Options): ConfiguredLogger
 	local hooks = logger_hooks(options.hooks)
 
-	local function log(severity: string, message: string, ...)
+	local function log(severity: Severity, message: string, ...)
 		hooks.notify("on_raw_log", severity, message, ...)
 		hooks.notify("on_log", severity, get_formatted_message(hooks, severity, message, ...))
 	end
